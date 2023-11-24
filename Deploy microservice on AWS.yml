@@ -1,0 +1,42 @@
+Container Registry:
+Create an Amazon ECR repository to store your Docker image. Replace your-ecr-repository with your desired repository name.
+aws ecr create-repository --repository-name your-ecr-repository
+
+Authenticate Docker to the ECR registry:
+bash
+aws ecr get-login-password --region your-region | docker login --username AWS --password-stdin your-account-id.dkr.ecr.your-region.amazonaws.com
+
+Build and push your Docker image to ECR:
+bash
+docker build -t your-account-id.dkr.ecr.your-region.amazonaws.com/your-ecr-repository:latest .
+docker push your-account-id.dkr.ecr.your-region.amazonaws.com/your-ecr-repository:latest
+
+
+Update Kubernetes Manifests:
+Update deployment.yaml to use the ECR image:
+# deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-eligibility-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: loan-eligibility
+  template:
+    metadata:
+      labels:
+        app: loan-eligibility
+    spec:
+      containers:
+      - name: loan-eligibility
+        image: your-account-id.dkr.ecr.your-region.amazonaws.com/your-ecr-repository:latest
+        ports:
+        - containerPort: 3000
+
+Deploy to Kubernetes:
+Apply the updated manifests to deploy your microservice:
+bashCopy code
+kubectl apply -f deployment.yaml
